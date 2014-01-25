@@ -35,6 +35,7 @@ public class GetFileSize extends AsyncTask<String, String, String> {
 		{
 			add("ZIP");
 			add("RAR");
+			add("7Z");
 		}
 	};
 
@@ -67,6 +68,8 @@ public class GetFileSize extends AsyncTask<String, String, String> {
 		}
 	};
 
+	public static int beginT;
+
 	private RandomAccessFile mOuts;
 	private long fLength;
 	private int fId; // id of thread
@@ -84,6 +87,7 @@ public class GetFileSize extends AsyncTask<String, String, String> {
 		// TODO Auto-generated method stub
 		this.mUrl = urls[0];
 		try {
+			beginT = (int) System.currentTimeMillis();
 			URL url = new URL(this.mUrl);
 			HttpURLConnection connection = (HttpURLConnection) url
 					.openConnection();
@@ -91,6 +95,9 @@ public class GetFileSize extends AsyncTask<String, String, String> {
 			this.fLength = connection.getContentLength();
 			Log.e("file size", Long.toString(this.fLength));
 			connection.disconnect();
+			if (this.fLength <= 0) {
+				return null;
+			}
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -102,31 +109,32 @@ public class GetFileSize extends AsyncTask<String, String, String> {
 
 	@Override
 	protected void onPostExecute(String file_url) {
-
-		aFile = new MFile(this.mUrl, fLength);
-		String dir = setPathDownloadedFile(this.mUrl);
-		aFile.path = dir;
-		try {
-			mFileDest = new RandomAccessFile(dir, "rw");
-			mFileDest.setLength(this.fLength);
+		if (file_url != null) {
+			aFile = new MFile(this.mUrl, fLength);
+			String dir = setPathDownloadedFile(this.mUrl);
 			aFile.path = dir;
+			try {
+				mFileDest = new RandomAccessFile(dir, "rw");
+				mFileDest.setLength(this.fLength);
+				aFile.path = dir;
 
-			if (this.fLength <= PART) {// one part
-				beginDownload(fLength);
-			} else if (this.fLength <= PARTS_4) {// 4 parts
+				if (this.fLength <= PART) {// one part
+					beginDownload(fLength);
+				} else if (this.fLength <= PARTS_4) {// 4 parts
 
-				long partSize = (this.fLength / 4) + 1;
-				beginDownload(partSize);
-			} else {// 8 parts
-				long partSize = (this.fLength / 6) + 1;
-				beginDownload(partSize);
+					long partSize = (this.fLength / 4) + 1;
+					beginDownload(partSize);
+				} else {// 8 parts
+					long partSize = (this.fLength / 8) + 1;
+					beginDownload(partSize);
+				}
+			} catch (FileNotFoundException e) {
+
+				e.printStackTrace();
+			} catch (IOException e) {
+
+				e.printStackTrace();
 			}
-		} catch (FileNotFoundException e) {
-
-			e.printStackTrace();
-		} catch (IOException e) {
-
-			e.printStackTrace();
 		}
 
 	}
@@ -144,7 +152,22 @@ public class GetFileSize extends AsyncTask<String, String, String> {
 			PartFile aPart = new PartFile(aFile, id, startPos,
 					EnumStateFile.READY, blockSize, this.mFileDest);
 			aFile.getParts().add(aPart);
-			new DownloadFile(this.mContext, aPart).executeOnExecutor(
+
+			IsThreadBlock status = new IsThreadBlock("<" + startPos + ", "
+					+ (startPos + blockSize - 1) + ">");
+
+			if (status.getIsBlocked()) {
+				try {
+					wait(1000);
+					Log.e("wait", Long.toString(startPos));
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				continue;
+			}
+
+			new DownloadFile(mContext, aPart, status).executeOnExecutor(
 					THREAD_POOL_EXECUTOR, this.mUrl);
 
 			startPos += blockSize;

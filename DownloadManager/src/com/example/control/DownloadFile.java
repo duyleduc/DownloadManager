@@ -17,11 +17,12 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.activities.CustomActivity;
+import com.example.activities.MainActivity;
 import com.example.model.EnumStateFile;
 import com.example.model.PartFile;
 
 public class DownloadFile extends AsyncTask<String, String, String> {
-	private int beginT;
+
 	private DownloadManager dm;
 	private Context mCon;
 	private PartFile mPart;
@@ -29,10 +30,12 @@ public class DownloadFile extends AsyncTask<String, String, String> {
 	private BufferedInputStream stream;
 	private FileOutputStream fos;
 	private FileInputStream fis;
+	private IsThreadBlock status;
 
-	public DownloadFile(Context context, PartFile mPart) {
+	public DownloadFile(Context context, PartFile mPart, IsThreadBlock status) {
 		this.mCon = context;
 		this.mPart = mPart;
+		this.status = status;
 	}
 
 	@Override
@@ -47,18 +50,24 @@ public class DownloadFile extends AsyncTask<String, String, String> {
 		InputStream ins;
 		URL url;
 		int count = 0;
-		byte data[] = new byte[1024 * 32];
+		byte data[] = new byte[1024 * 53];
 		String partDir = CustomActivity.DLMDIR.getPath()
 				+ CustomActivity.CACHDIR + "/" + this.mPart.getId();
+
 		try {
-			beginT = (int) System.currentTimeMillis();
+
 			url = new URL(urlD[0]);
 			long end = this.mPart.getBegin() + this.mPart.getSizeChunk() - 1;
 			mConnection = (HttpURLConnection) url.openConnection();
 			String range = "bytes=" + (this.mPart.getBegin()) + "-" + (end);
 			mConnection.setRequestProperty("Range", range);
 			mConnection.connect();
-			mConnection.notify();
+			Log.e("range", range);
+			synchronized (status) {
+				status.setNotBlocked();
+				status.notify();
+			}
+
 			ins = this.mConnection.getInputStream();
 
 			long total = 0;
@@ -76,6 +85,11 @@ public class DownloadFile extends AsyncTask<String, String, String> {
 		} catch (MalformedURLException e) { // url generated
 			e.printStackTrace();
 		} catch (IOException e) { // httpurlconnection
+			synchronized (status) {
+				Log.e("inback block", Long.toString(this.mPart.getBegin()));
+				status.setBlocked();
+				status.notify();
+			}
 			e.printStackTrace();
 		}
 		return urlD[0];
@@ -100,7 +114,7 @@ public class DownloadFile extends AsyncTask<String, String, String> {
 							+ CustomActivity.CACHDIR + "/" + part.getId();
 					FileInputStream fis = new FileInputStream(partDir);
 
-					byte content[] = new byte[1024 * 32];
+					byte content[] = new byte[1024 * 53];
 					int count = 0;
 					while ((count = fis.read(content)) != -1) {
 						fos.write(content, 0, count);
@@ -111,10 +125,11 @@ public class DownloadFile extends AsyncTask<String, String, String> {
 
 				}
 				fos.close();
-
+				CustomActivity.label.setText(Integer.toString((int) System
+						.currentTimeMillis() - GetFileSize.beginT));
 				Log.e("finis",
 						Integer.toString((int) System.currentTimeMillis()
-								- beginT));
+								- GetFileSize.beginT));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

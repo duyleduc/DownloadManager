@@ -33,6 +33,7 @@ public class CustomActivity extends Activity {
 	public final static String COMDIR = "/compressed";
 	public final static String DOCDIR = "/document";
 	public final static String CACHDIR = "/cache";
+	public static TextView label ;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +41,7 @@ public class CustomActivity extends Activity {
 		setContentView(R.layout.activity_custom);
 		createFolder();
 
-		TextView label = (TextView) findViewById(R.id.show_data);
+		label = (TextView) findViewById(R.id.show_data);
 		Uri url = getIntent().getData();
 		label.setText(url.toString());
 		new GetFileSize(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
