@@ -3,14 +3,19 @@ package com.example.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
 public class MFile {
 
 	private EnumStateFile state;
 	private String fUrl;
 	private long fSize;
 	private List<PartFile> parts;
-	
 	public String path;
+	private long downloadedLenght;
+
+	private String percentDownloaded;
 
 	public MFile(String fUrl, long fLength) {
 		super();
@@ -18,6 +23,8 @@ public class MFile {
 		this.fUrl = fUrl;
 		this.fSize = fLength;
 		this.parts = new ArrayList<PartFile>();
+		this.downloadedLenght = 0;
+		this.percentDownloaded = "0%";
 	}
 
 	public MFile() {
@@ -66,7 +73,7 @@ public class MFile {
 	 * @param fSize
 	 *            the fSize to set
 	 */
-	public void setfSize(int fSize) {
+	public void setfSize(long fSize) {
 		this.fSize = fSize;
 	}
 
@@ -83,6 +90,29 @@ public class MFile {
 	 */
 	public void setParts(List<PartFile> parts) {
 		this.parts = parts;
+	}
+
+	public long getDownloadedLenght() {
+		return downloadedLenght;
+	}
+
+	public void setDownloadedLenght(long downloadedLenght) {
+		this.downloadedLenght = downloadedLenght;
+	}
+
+	/**
+	 * @return the percentDownloaded
+	 */
+	public String getPercentDownloaded() {
+		return percentDownloaded;
+	}
+
+	/**
+	 * @param percentDownloaded
+	 *            the percentDownloaded to set
+	 */
+	public void setPercentDownloaded(String percentDownloaded) {
+		this.percentDownloaded = percentDownloaded;
 	}
 
 }

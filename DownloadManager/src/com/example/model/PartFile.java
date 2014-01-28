@@ -4,14 +4,14 @@ import java.io.RandomAccessFile;
 
 public class PartFile {
 	private MFile file;
-	private int id;
+	private String id;
 	private long begin; // point begining download
 	private EnumStateFile state;
 	private long size;
 	private RandomAccessFile mFileDest;
 	
 
-	public PartFile(MFile file, int id, long startPos, 
+	public PartFile(MFile file, String id, long startPos, 
 			EnumStateFile state, long blockSize, RandomAccessFile outs) {
 		super();
 		this.file = file;
@@ -41,7 +41,7 @@ public class PartFile {
 	/**
 	 * @return the id
 	 */
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
@@ -49,7 +49,7 @@ public class PartFile {
 	 * @param id
 	 *            the id to set
 	 */
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
